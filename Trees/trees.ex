@@ -40,6 +40,18 @@ end
 #tree = {:node, :key, value, left, right}
 defmodule Tree2 do
 
+  def test() do
+     t = new()
+     t = insert(:one, 1, t)
+     t = insert(:two, 2, t)
+     t = insert(:six, 6, t)
+     t = insert(:three, 3, t)
+     t = insert(:five, 5, t)
+     t = insert(:eight, 8, t)
+     t = insert(:nine, 9, t)
+     t
+  end
+
   #lookup a value given key argument
   def lookup(key, :nil) do :no end
   def lookup(key, {:node, key, value, _, _}) do {:value, value} end
@@ -88,9 +100,6 @@ defmodule Tree2 do
 
   def delete(key, {:node, key, _, {:node, left_k, _, l1, r2}, {:node,right_k, l1, r2}}) do
     {:node, left_k,_,l1,r2}
-  end
-
-
   end #FEL, hur ska denna kunna åtgärdas (atm ger den oss en nod utan key pair values)
 
   def delete(key, {:node, k, v, left, right}) do
