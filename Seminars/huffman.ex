@@ -14,7 +14,7 @@ defmodule Huffman do
 
   def test do
     sample = sample()
-    tree = tree(sample)
+    tree = construct_tree(sample)
     encode = encode_table(tree)
     decode = decode_table(tree)
     text = text()
@@ -22,15 +22,9 @@ defmodule Huffman do
     decode(seq, decode)
   end
 
-  def freq(sample) do
-    #run through samplelist ([102,111,111] osv), collect freq of char
-    #spara som tuple med char och frek nr?
-    freq(sample, [])
-  end
-
-  #basecase
-  def freq([], freq) do isort(freq) end
-  #take char and store within frequency
+   #read one char at a time, store char and #occurences in frequency list
+  def freq(sample) do freq(sample, []) end
+  def freq([], freq) do freq end
   def freq([char | rest], freq) do
     if member_freq(char, freq) do
       updated_freq = incr_freq(char, freq, [])
@@ -42,11 +36,22 @@ defmodule Huffman do
 
 
 
-  #spara noder som @type :: {char, frek} | {freq_sum}
-  def tree(sample) do
-    freq = freq(sample)   #find out frequencies of tble
-    #huffman(freq)
+  #build tree, sorted frequency list
+  def construct_tree(sample) do
+    freq = (freq(sample))
+    sorted_freq = Enum.sort(freq,fn({_,f1}, {_,f2}) -> f1 <= f2 end)  #sort by frequency in ascending order
+    huffman(sorted_freq)
   end
+
+  #build the huffman tree
+  def huffman([{tree, _}]) do {tree, _} end
+  def huffman([{a, freq_a}, {b, freq_b} | rest]) do
+    new_list = [{{a , b}, freq_a + freq_b}] ++ rest
+    sorted = Enum.sort(new_list, fn({_,f1}, {_,f2}) -> f1 <= f2 end)
+    huffman(sorted)
+  end
+  #< eller = ?? verkar ge heeeelt olika träd
+
 
   def encode_table(tree) do
     # To implement...
@@ -65,13 +70,14 @@ defmodule Huffman do
   end
 
   #-------------helper functions-------------
+  #check if given char already is member in frequency table
   def member_freq(char, []) do false end
   def member_freq(char, [{char,_}|_]) do true end
   def member_freq(char, [{c,_}|t]) do
     member_freq(char, t)
   end
 
-  #reconstructs list and increments selected frequence
+  #reconstructs list and increments frequency for given char (that is member of list)
   def incr_freq(_,[],updated) do updated end
   def incr_freq(char, [{char,freq} | rest], updated) do
    freq = freq + 1
@@ -81,22 +87,6 @@ defmodule Huffman do
     updated = [h | incr_freq(char, rest, updated)]
   end
 
-  #sort by frequency, lowest frecuency at lowest index
-  def isort(lst) do isort(lst, [])end
-  def isort([], sorted) do sorted end
-  def isort([h|t], sorted) do
-    sorted = insert(h,sorted)
-    isort(t, sorted)
-  end
 
-  #inserts element in right place, ascending order
-  def insert({c,element},[]) do [{c,element}] end
-  def insert({c, element}, [{x,freq}|rest]) do
-    if (element < freq) do
-      [{c, element},{x,freq}| rest]
-    else
-       [{x, freq}] ++ insert({c, element},rest)
-    end
-  end
 
 end
