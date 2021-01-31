@@ -55,7 +55,7 @@ defmodule Huffman do
   #use huffman tree to encode each char
   def encode_table(tree) do encode_table(tree, []) end
   def encode_table({left,right}, encoding) do
-    left_result = encode_table(left, [0|encoding])  
+    left_result = encode_table(left, [0|encoding])
     right_result = encode_table(right, [1|encoding])
     left_result ++ right_result
   end
@@ -71,15 +71,29 @@ defmodule Huffman do
     reverse(t, [h|rev])
   end
 
-  def decode_table(tree) do
-    # To implement...
+  #translate plain text info huffman encoding
+  def encode(text, table) do encode(text, table, []) end
+  def encode([], table, result) do result end
+  def encode([c|rest], table, result) do
+    result =  [ look_up(c, table) | encode(rest, table, result)]
   end
 
-  def encode(text, table) do
-    # To implement...
+  #look up matching encoding for given char
+  def look_up(c, [{a,encoding}|rest]) do
+    cond do
+      c === a -> encoding
+      true -> look_up(c,rest)
+    end
+  end
+  def look_up(c, []) do
+    [:nil]
   end
 
   def decode(seq, tree) do
+    # To implement...
+  end
+
+  def decode_table(tree) do
     # To implement...
   end
 
