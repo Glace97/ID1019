@@ -34,6 +34,23 @@ defmodule Huffman do
     end
   end
 
+  #check if given char already is member in frequency table
+    def member_freq(char, []) do false end
+    def member_freq(char, [{char,_}|_]) do true end
+    def member_freq(char, [{c,_}|t]) do
+      member_freq(char, t)
+    end
+
+    #reconstructs list and increments frequency for given char (that is member of list)
+    def incr_freq(_,[],updated) do updated end
+    def incr_freq(char, [{char,freq} | rest], updated) do
+     freq = freq + 1
+     updated = [{char, freq} | incr_freq(char, rest, updated)]
+    end
+    def incr_freq(char, [h | rest], updated) do
+      updated = [h | incr_freq(char, rest, updated)]
+    end
+
 
 
   #build tree, by sending a sorted frequency list
@@ -72,13 +89,16 @@ defmodule Huffman do
   end
 
   #translate plain text info huffman encoding
+  #time complexity: encode -> linear for each char in text, + lookup (linear for each recursive call) + append which is lenar
+  #therefore n*n*n -> O(n^3)
   def encode(text, table) do encode(text, table, []) end
   def encode([], table, result) do result end
   def encode([c|rest], table, result) do
-    result =  [ look_up(c, table) | encode(rest, table, result)]
+    result =  look_up(c, table) ++ encode(rest, table, result)
   end
 
   #look up matching encoding for given char
+  #time complexity; worst caste; linear for looking trough all encoded characters
   def look_up(c, [{a,encoding}|rest]) do
     cond do
       c === a -> encoding
@@ -89,32 +109,22 @@ defmodule Huffman do
     [:nil]
   end
 
-  def decode(seq, tree) do
-    # To implement...
+  def decode([], _) do [] end
+  def decode(seq, table) do
+    {char, rest} = decode_char(seq, 1, table) #get one char and rest of sequence
+    [char | decode(rest, table)]
   end
 
-  def decode_table(tree) do
-    # To implement...
+  def decode_char([],_,_) do [] end
+  def decode_char(seq, n, table) do
+    {code, rest} = Enum.split(seq, n)   #splitfunction, splits the enumarable with first part being n-element large, i.e splits of first bit
+    case List.keyfind(table, code, 1) do  #keyfind matches code to 2nd argument in tuple (from encoding table)
+      {char, code} -> {char, rest};    #return the tuple if we find match
+               nil -> decode_char(seq, n+1, table) #if no match, nil. Check with one more bit
+    end
   end
 
-  #-------------helper functions-------------
-  #check if given char already is member in frequency table
-  def member_freq(char, []) do false end
-  def member_freq(char, [{char,_}|_]) do true end
-  def member_freq(char, [{c,_}|t]) do
-    member_freq(char, t)
-  end
-
-  #reconstructs list and increments frequency for given char (that is member of list)
-  def incr_freq(_,[],updated) do updated end
-  def incr_freq(char, [{char,freq} | rest], updated) do
-   freq = freq + 1
-   updated = [{char, freq} | incr_freq(char, rest, updated)]
-  end
-  def incr_freq(char, [h | rest], updated) do
-    updated = [h | incr_freq(char, rest, updated)]
-  end
-
-
+  #generate an encodingtable for decode function
+  def decode_table(tree) do encode_table(tree) end
 
 end
