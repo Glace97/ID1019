@@ -14,12 +14,12 @@ defmodule Huffman do
 
   def test do
     sample = sample()
-    tree = construct_tree(sample)
-    encode = encode_table(tree)
-    decode = decode_table(tree)
-    text = text()
-    seq = encode(text, encode)  #represented as list of 1 and 0s.
-    decode(seq, decode)
+ #   tree = construct_tree(sample)
+ #   encode = encode_table(tree)
+ #   decode = decode_table(tree)
+#  text = text()
+ #   seq = encode(text, encode)  #represented as list of 1 and 0s.
+  #  decode(seq, decode)
   end
 
    #read one char at a time, store char and #occurences in frequency list
@@ -36,25 +36,39 @@ defmodule Huffman do
 
 
 
-  #build tree, sorted frequency list
+  #build tree, by sending a sorted frequency list
   def construct_tree(sample) do
     freq = (freq(sample))
     sorted_freq = Enum.sort(freq,fn({_,f1}, {_,f2}) -> f1 <= f2 end)  #sort by frequency in ascending order
     huffman(sorted_freq)
   end
 
-  #build the huffman tree
-  def huffman([{tree, _}]) do {tree, _} end
+  #build and return the huffman tree
+  def huffman([{tree, _}]) do tree end
   def huffman([{a, freq_a}, {b, freq_b} | rest]) do
-    new_list = [{{a , b}, freq_a + freq_b}] ++ rest
-    sorted = Enum.sort(new_list, fn({_,f1}, {_,f2}) -> f1 <= f2 end)
+    new_list = [{{a , b}, freq_a + freq_b}] ++ rest   #combine leafs into parent node, append parentnode to sequencelist
+    sorted = Enum.sort(new_list, fn({_,f1}, {_,f2}) -> f1 <= f2 end)  #sort sequency list by frequency (rearrange parentnode)
     huffman(sorted)
   end
   #< eller = ?? verkar ge heeeelt olika träd
 
+  #use huffman tree to encode each char
+  def encode_table(tree) do encode_table(tree, []) end
+  def encode_table({left,right}, encoding) do
+    left_result = encode_table(left, [0|encoding])  
+    right_result = encode_table(right, [1|encoding])
+    left_result ++ right_result
+  end
+  def encode_table(char, encoding) do
+    encoding = reverse(encoding)
+    encoded_char = {char, encoding}
+    [encoded_char]
+  end
 
-  def encode_table(tree) do
-    # To implement...
+  def reverse(lst) do reverse(lst,[]) end
+  def reverse([], rev) do rev end
+  def reverse([h|t], rev) do
+    reverse(t, [h|rev])
   end
 
   def decode_table(tree) do
