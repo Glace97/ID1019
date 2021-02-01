@@ -1,5 +1,5 @@
 defmodule Huffman do
-####################test##################################
+  #####################################################################################
   def sample do
     'the quick brown fox jumps over the lazy dog
     this is a sample text that we will use when we build
