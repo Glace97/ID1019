@@ -40,7 +40,10 @@ defmodule Derive do
   #derive constants/single variables
   def derive({:num, _}, _) do {:num, 0} end
   def derive({:var, v}, v) do {:num, 1} end
-  def derive({:var, _}, _) do {:num ,0} end #??
+  #vi kommer inte ner hit ommönstermatchning ovanför lyckas
+  #"catch all", dvs om vi dervierar över en helt anna variabel
+  def derive({:var, _}, _) do {:num ,0} end
+
 
   #derive addition
   def derive({:add, e1, e2}, v) do
@@ -67,9 +70,15 @@ defmodule Derive do
   def calc({:var, v}, v, val) do {:num, val} end
   def calc({:num, n}, _, _) do {:num, n} end
   def calc({:var, v}, _,_) do {:var, v} end
-  def calc({:add, e1, e2}, v, val) do {:add, calc(e1, v, val), calc(e2, v, val)} end
-  def calc({:mul, e1, e2},v ,val) do {:mul, calc(e1, v, val), calc(e2, v, val)} end
-  def calc({:exp, e1, p}, v, val) do {:exp, calc(e1, v, val), calc(p, v, val)} end
+  def calc({:add, e1, e2}, v, val) do
+    {:add, calc(e1, v, val), calc(e2, v, val)}
+  end
+  def calc({:mul, e1, e2},v ,val) do
+    {:mul, calc(e1, v, val), calc(e2, v, val)}
+  end
+  def calc({:exp, e1, p}, v, val) do
+    {:exp, calc(e1, v, val), calc(p, v, val)}
+  end
 
   #simply, förenkla uttrycken
   def simplify({:add, e1, e2}) do
@@ -87,6 +96,7 @@ defmodule Derive do
   def simplify_add(e1,{:num, 0}) do e1 end
   def simplify_add({:num, n1},{:num, n2}) do {:num, n1+n2} end
   def simplify_add(e1, e2) do {:add, e1, e2} end
+  #tillägg av flera fall blr jobbigt och redundant. Går det skriva på bättre sätt?
 
   def simplify_mul({:num, 0}, _) do {:num, 0} end
   def simplify_mul(_, {:num, 0}) do {:num, 0} end
