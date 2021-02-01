@@ -1,5 +1,5 @@
 defmodule Huffman do
-
+####################test##################################
   def sample do
     'the quick brown fox jumps over the lazy dog
     this is a sample text that we will use when we build
@@ -14,14 +14,15 @@ defmodule Huffman do
 
   def test do
     sample = sample()
- #   tree = construct_tree(sample)
- #   encode = encode_table(tree)
- #   decode = decode_table(tree)
-#  text = text()
- #   seq = encode(text, encode)  #represented as list of 1 and 0s.
-  #  decode(seq, decode)
+    tree = construct_tree(sample)
+    encode = encode_table(tree)
+    decode = decode_table(tree)
+    text = text()
+    seq = encode(text, encode)
+    decode(seq, decode)
   end
 
+  #####################################################################################
    #read one char at a time, store char and #occurences in frequency list
   def freq(sample) do freq(sample, []) end
   def freq([], freq) do freq end
@@ -35,24 +36,23 @@ defmodule Huffman do
   end
 
   #check if given char already is member in frequency table
-    def member_freq(char, []) do false end
-    def member_freq(char, [{char,_}|_]) do true end
-    def member_freq(char, [{c,_}|t]) do
-      member_freq(char, t)
-    end
+  def member_freq(char, []) do false end
+  def member_freq(char, [{char,_}|_]) do true end
+  def member_freq(char, [{c,_}|t]) do
+    member_freq(char, t)
+  end
 
     #reconstructs list and increments frequency for given char (that is member of list)
-    def incr_freq(_,[],updated) do updated end
-    def incr_freq(char, [{char,freq} | rest], updated) do
-     freq = freq + 1
-     updated = [{char, freq} | incr_freq(char, rest, updated)]
-    end
-    def incr_freq(char, [h | rest], updated) do
-      updated = [h | incr_freq(char, rest, updated)]
-    end
+  def incr_freq(_,[],updated) do updated end
+  def incr_freq(char, [{char,freq} | rest], updated) do
+    freq = freq + 1
+    updated = [{char, freq} | incr_freq(char, rest, updated)]
+  end
+  def incr_freq(char, [h | rest], updated) do
+    updated = [h | incr_freq(char, rest, updated)]
+  end
 
-
-
+ #####################################################################################
   #build tree, by sending a sorted frequency list
   def construct_tree(sample) do
     freq = (freq(sample))
@@ -69,6 +69,7 @@ defmodule Huffman do
   end
   #< eller = ?? verkar ge heeeelt olika träd
 
+ #####################################################################################
   #use huffman tree to encode each char
   def encode_table(tree) do encode_table(tree, []) end
   def encode_table({left,right}, encoding) do
@@ -82,15 +83,20 @@ defmodule Huffman do
     [encoded_char]
   end
 
+  #generate encoding table for decoding
+  def decode_table(tree) do encode_table(tree) end
+
   def reverse(lst) do reverse(lst,[]) end
   def reverse([], rev) do rev end
   def reverse([h|t], rev) do
     reverse(t, [h|rev])
   end
 
+  #####################################################################################
+
   #translate plain text info huffman encoding
-  #time complexity: encode -> linear for each char in text, + lookup (linear for each recursive call) + append which is lenar
-  #therefore n*n*n -> O(n^3)
+  #time complexity: encode -> linear for each char in text, + lookup (linear for each recursive call) + append which is linear
+  #therefore n*n*n -> O(n^3) (not the greatest)
   def encode(text, table) do encode(text, table, []) end
   def encode([], table, result) do result end
   def encode([c|rest], table, result) do
@@ -109,22 +115,73 @@ defmodule Huffman do
     [:nil]
   end
 
+  #####################################################################################
+  #decode a encoded sequence
   def decode([], _) do [] end
   def decode(seq, table) do
     {char, rest} = decode_char(seq, 1, table) #get one char and rest of sequence
     [char | decode(rest, table)]
   end
 
+  #check sequence for first matching characters
   def decode_char([],_,_) do [] end
   def decode_char(seq, n, table) do
-    {code, rest} = Enum.split(seq, n)   #splitfunction, splits the enumarable with first part being n-element large, i.e splits of first bit
-    case List.keyfind(table, code, 1) do  #keyfind matches code to 2nd argument in tuple (from encoding table)
-      {char, code} -> {char, rest};    #return the tuple if we find match
-               nil -> decode_char(seq, n+1, table) #if no match, nil. Check with one more bit
+    #Enum.split: splits the enumarable into two lists with first list being n-element large.
+    {code, rest} = Enum.split(seq, n)
+    #keyfind: match with tuple in table, code will match second slot in tuple
+    case List.keyfind(table, code, 1) do
+       #return the char and rest of sequence if match
+      {char, code} -> {char, rest};
+      #if no match, try with 1-bit longer sequence
+      nil -> decode_char(seq, n+1, table)
     end
   end
 
-  #generate an encodingtable for decode function
-  def decode_table(tree) do encode_table(tree) end
+ #####################################################################################
+ #performance tests
 
+ #read a chunk of text for benchmarking
+ def read(file, n) do
+    {:ok, sample} = File.open(file, [:read])
+    binary = IO.read(sample, n)
+    File.close(sample)
+    length = byte_size(binary)  #byte_size function returns number of bytes in binary
+    #converting characters to unciode - text expressed in most of worlds writing
+    #utf 8, characters stored in 1 byte
+    case :unicode.characters_to_list(binary, :utf8) do
+    {:incomplete, chars, rest} -> {chars, length - byte_size(rest)}
+    chars -> {chars, length}
+    end
+  end
+
+
+  #measure time for each operation
+  # Anrop Huffman.benchmark("kallocain.txt", n), n från 1000 uppåt
+  def benchmark(file, n) do
+    {text,_} = read(file, n)  #store read file in tuple
+    c = length(text)
+    {tree,t1} = timer(fn -> construct_tree(text) end)  #includes time for building frequencylist
+    {encode_table,t2} = timer(fn -> encode_table(tree) end)
+    size = length(encode_table)
+    {decode_table, _} = timer(fn -> decode_table(tree) end)
+    {encoding, t3} = timer(fn-> encode(text, encode_table) end)
+    {_, t4} = timer(fn -> decode(encoding, decode_table) end)
+    encoding_size = div(length(encoding), 8)  # #bytes stores
+
+    IO.puts("text: #{c} characters")
+    IO.puts("#{t1}ms building frequency table and huffmantree")
+    IO.puts("#{t2}ms building encoding table")
+    IO.puts("#{t3}ms encoding given text")
+    IO.puts("#{t4}ms decoding text")
+    IO.puts("#{t1}ms building frequency table and tree")
+    IO.puts(" #{size} nr of characters, #{encoding_size}: size of encoding")
+  end
+
+  #measure time taken for each func
+  def timer(func) do
+    start_time = Time.utc_now()
+    result = func.()
+    end_time = Time.utc_now()
+    {result, Time.diff(end_time, start_time, :microsecond) / 1000}
+  en
 end
