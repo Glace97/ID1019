@@ -94,7 +94,7 @@ defmodule Huffman do
 
   #####################################################################################
 
-  #translate plain text info huffman encoding
+  #translate plain text to huffman encoding
   #time complexity: encode -> linear for each char in text, + lookup (linear for each recursive call) + append which is linear
   #therefore n*n*n -> O(n^3) (not the greatest)
   def encode(text, table) do encode(text, table, []) end
@@ -136,21 +136,22 @@ defmodule Huffman do
       nil -> decode_char(seq, n+1, table)
     end
   end
-
- #####################################################################################
+#####################################################################################
  #performance tests
 
  #read a chunk of text for benchmarking
  def read(file, n) do
     {:ok, sample} = File.open(file, [:read])
-    binary = IO.read(sample, n)
+    binary = IO.read(sample, n) #read file in binary. #n = nr of chars at a time
     File.close(sample)
     length = byte_size(binary)  #byte_size function returns number of bytes in binary
     #converting characters to unciode - text expressed in most of worlds writing
     #utf 8, characters stored in 1 byte
     case :unicode.characters_to_list(binary, :utf8) do
-    {:incomplete, chars, rest} -> {chars, length - byte_size(rest)}
-    chars -> {chars, length}
+    #{:incomplete, chars, rest} -> {chars, length - byte_size(rest)}
+    #chars -> {chars, length}
+    {:incomplete, list, _} -> list;
+    list -> list
     end
   end
 
@@ -158,8 +159,9 @@ defmodule Huffman do
   #measure time for each operation
   # Anrop Huffman.benchmark("kallocain.txt", n), n från 1000 uppåt
   def benchmark(file, n) do
-    {text,_} = read(file, n)  #store read file in tuple
-    c = length(text)
+    text = read(file,n)
+    #{text,b} = read(file, n)  #store read file in tuple
+    bytes = length(text)
     {tree,t1} = timer(fn -> construct_tree(text) end)  #includes time for building frequencylist
     {encode_table,t2} = timer(fn -> encode_table(tree) end)
     size = length(encode_table)
@@ -168,13 +170,14 @@ defmodule Huffman do
     {_, t4} = timer(fn -> decode(encoding, decode_table) end)
     encoding_size = div(length(encoding), 8)  # #bytes stores
 
-    IO.puts("text: #{c} characters")
+    IO.puts("text: #{bytes} bytes")
     IO.puts("#{t1}ms building frequency table and huffmantree")
     IO.puts("#{t2}ms building encoding table")
     IO.puts("#{t3}ms encoding given text")
     IO.puts("#{t4}ms decoding text")
     IO.puts("#{t1}ms building frequency table and tree")
-    IO.puts(" #{size} nr of characters, #{encoding_size}: size of encoding")
+    #IO.puts("#{c} characters, source size: #{b} bytes, #{encoding_size}: bytes of encoding")
+    IO.puts("#{bytes} bytes, #{encoding_size}: bytes of encoding")
   end
 
   #measure time taken for each func
@@ -183,5 +186,5 @@ defmodule Huffman do
     result = func.()
     end_time = Time.utc_now()
     {result, Time.diff(end_time, start_time, :microsecond) / 1000}
-  en
+  end
 end
