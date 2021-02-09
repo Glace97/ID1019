@@ -52,9 +52,34 @@ defmodule Env do
   #def remove(_,[],_) do
   #  :does_not_exist
   #end
+
+  #creates a new environment from list of variable identifiers and an existing environment
+  #add all vars that is bound in enviroment
+  def closure(vars, env) do closure(vars, env, [])  end
+  def closure([], _, closure) do closure end
+  def closure([h|t], env, closure) do
+    case lookup(h, env) do
+      nil ->
+        :error
+      {id, str} ->
+        closure(t, env, add(id, str, closure))  #if var bound in env, add to closure
+    end
+
+  end
+
+  #returns environment after adding bindings for all vars in sequence of closure
+  #par is list of variable id (paramters), strs list of data strucutre,
+  #and env (that includes all free variables)
+  def args([], [], env) do env end
+  def args([h|t], [str|rest], env) do
+    args(t, rest, add(h, str, env))
+  end
+  def args([],_, env) do :error end
+  def args(_, [], env) do :error end
+
 end
 
-#existst for reasons that will be given later
+
 defmodule Eager do
 
   #evaluation
@@ -86,12 +111,47 @@ defmodule Eager do
   end
 end
 
+
+#evaluate lambda expression, {λ, paramter, free variables, returned sequence}
+#return closure with pattern, free variables and list of bound variables within original env
+def eval_expr({:lambda, par, free, seq}, env) do
+
+   case Env.closure(free, env) do
+    :error ->
+      :error
+    closure ->
+      #returns closure (new enviroment contains values of free variables withing function)
+      {:ok, {:closure, par, seq, closure}}
+  end
+end
+
+
+#apply closure to a sequence of argument expressions
+def eval_expr({:apply, expr, args}, env) do
+  #should evaluate f() that has been previously matched and hopefully, returned a closureenvironment
+  case eval_expr(expr, env) do
+    :error ->
+      :error
+    {:ok, {:closure, par, seq, closure}} ->
+      #will return list of structures
+      case eval_args(args, env) do
+         :error ->
+           :foo
+         strs ->
+          #new environment adds all paramterers bound to structures to closure env
+          env = Env.args(par, strs, closure)
+          eval_seq(seq, env)
+      end
+  end
+end
+
+
 #evaluate case expressions
 def eval_expr({:case, expr, cls}, env) do
   case eval_expr(expr, env) do
-    :error ->
-      :error  
-    {:ok, str} ->
+   :error ->
+      :error
+   {:ok, str} ->
       eval_cls(cls, str, env)
   end
 end
@@ -99,8 +159,6 @@ end
 
 #eval_cls takes a list of clauses, a data structure and env
 #selects righ clause and continues execution
-
-#4 argument??
 def eval_cls([], _, _) do
   :error
 end
@@ -116,6 +174,23 @@ def eval_cls([{:clause, ptr, seq} | cls], str, env) do
     #else, evaluatesequence in this env
     {:ok, env} ->
       eval_seq(seq, new_env)
+  end
+end
+
+#evaluate arguments, passed as a list of expr; evaulate each expression against env
+def eval_args([], env) do [] end
+def eval_args([arg|rest], env) do
+  case eval_expr(arg, env) do
+    :error ->
+      :error
+      #if succeed, evaluate str t
+    {_, s} ->
+      #if succed, check rest of list, store each evaluated structure in list
+      case eval_args(rest, env) do
+        :error ->
+          :error
+        str -> [s|str]
+      end
   end
 end
 
