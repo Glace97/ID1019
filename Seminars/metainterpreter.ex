@@ -71,7 +71,7 @@ defmodule Eager do
     end
   end
 
-  #evaluate compound
+  #evaluate compound/tuple
   def eval_expr({:cons, e1, e2}, env) do
     case eval_expr(e1, env) do
     :error ->
@@ -86,8 +86,40 @@ defmodule Eager do
   end
 end
 
-  #patternmatchning
+#evaluate case expressions
+def eval_expr({:case, expr, cls}, env) do
+  case eval_expr(expr, env) do
+    :error ->
+      :error  
+    {:ok, str} ->
+      eval_cls(cls, str, env)
+  end
+end
 
+
+#eval_cls takes a list of clauses, a data structure and env
+#selects righ clause and continues execution
+
+#4 argument??
+def eval_cls([], _, _) do
+  :error
+end
+
+def eval_cls([{:clause, ptr, seq} | cls], str, env) do
+  #evaluate new scope, by removing all bindings in env
+  vars = extract_vars(ptr)
+  new_env = Env.remove(vars, env)
+  case eval_match(ptr, str, new_env) do
+    #if fails, check next clause
+    :fail ->
+      eval_cls(cls, str, env)
+    #else, evaluatesequence in this env
+    {:ok, env} ->
+      eval_seq(seq, new_env)
+  end
+end
+
+  #patternmatchning
   #dont care always matches, returns unchanged environment
   def eval_match(:ignore, _, env) do
     {:ok, env}
@@ -156,7 +188,7 @@ end
         #case will assign vairable to str if ok
          case eval_match(id, str, env) do
           :fail -> :error
-          {:ok, new_env} -> 
+          {:ok, new_env} ->
             eval_seq(rst_seq, new_env)
        end
     end
