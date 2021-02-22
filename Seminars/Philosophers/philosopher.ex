@@ -8,19 +8,19 @@ defmodule Philosopher do
 
 
   #spawns a philosopher process, start of by thinking
-  def start(hunger, left, right, name) do
-    spawn_link(fn -> think(hunger, left, right, name) end)
+  def start(hunger, left, right, name, ctrl) do
+    spawn_link(fn -> think(hunger, left, right, name, ctrl) end)
   end
 
-  def think(hunger, left, right, name) do
+  def think(hunger, left, right, name, ctrl) do
     IO.puts("#{name} is dreaming")
     #sleep for randomized time
-    sleep(10)
+    sleep(10000)
     IO.puts("#{name} is hungry")
-    get_chopstick(hunger, left, right, name)
+    get_chopstick(hunger, left, right, name, ctrl)
   end
 
-  def get_chopstick(hunger, left, right, name) do
+  def get_chopstick(hunger, left, right, name, ctrl) do
     IO.puts("#{name} reaches for left chopstick")
     l_chopstick = Chopstick.request(left)
     r_chopstick = Chopstick.request(right)
@@ -31,20 +31,20 @@ defmodule Philosopher do
         IO.puts("#{name} reaches for right chopstick")
         case r_chopstick do
           :ok -> IO.puts("#{name} gets right chopstick, and can now eat!")
-          eat(hunger-1, left, right, name)
+          eat(hunger-1, left, right, name, ctrl)
         end
     end
   end
 
 
-  def eat(hunger, left, right, name) do
+  def eat(hunger, left, right, name, ctrl) do
     IO.puts("#{name} starts eating")
     #wait while eating
-    sleep(5)
-    done_eating(hunger, left, right, name)
+    sleep(5000)
+    done_eating(hunger, left, right, name, ctrl)
   end
 
-  def done_eating(hunger, left, right, name) do
+  def done_eating(hunger, left, right, name, ctrl) do
     IO.puts("#{name} is done eating for now. Puts away chopsticks")
     Chopstick.return(left)
     Chopstick.return(right)
@@ -52,7 +52,7 @@ defmodule Philosopher do
       IO.puts("#{name} is full and wont eat ever again")
       send(ctrl, :done)
     else
-      think(hunger, left, right, name)
+      think(hunger, left, right, name, ctrl)
     end
   end
 
