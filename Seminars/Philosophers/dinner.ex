@@ -2,22 +2,25 @@ defmodule Dinner do
   def start(), do: spawn(fn -> init() end)
 
   def init() do
+    seed = 9874
     c1 = Chopstick.start()
     c2 = Chopstick.start()
     c3 = Chopstick.start()
     c4 = Chopstick.start()
     c5 = Chopstick.start()
     ctrl = self()
-    Philosopher.start(5, c1, c2, "Arendt", ctrl)
-    Philosopher.start(5, c2, c3, "Hypatia", ctrl)
-    Philosopher.start(5, c3, c4, "Simone", ctrl)
-    Philosopher.start(5, c4, c5, "Elisabeth", ctrl)
-    Philosopher.start(5, c5, c1, "Ayn", ctrl)
+    #each philosopher has a unique seed value
+    Philosopher.start(5, c1, c2, "Arendt", ctrl, seed)
+    Philosopher.start(5, c2, c3, "Hypatia", ctrl, seed + 1)
+    Philosopher.start(5, c3, c4, "Simone", ctrl, seed + 2)
+    Philosopher.start(5, c4, c5, "Elisabeth", ctrl, seed + 3)
+    Philosopher.start(5, c5, c1, "Ayn", ctrl, seed + 4)
     wait(5, [c1, c2, c3, c4, c5])
   end
 
 
   def wait(0, chopsticks) do
+    IO.puts"All philosophers are done eating"
     Enum.each(chopsticks, fn(c) -> Chopstick.quit(c) end)
   end
 
