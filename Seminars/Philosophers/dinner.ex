@@ -10,11 +10,11 @@ defmodule Dinner do
     c5 = Chopstick.start()
     ctrl = self()
     #each philosopher has a unique seed value
-    Philosopher.start(5, c1, c2, "Arendt", ctrl, seed)
-    Philosopher.start(5, c2, c3, "Hypatia", ctrl, seed + 1)
-    Philosopher.start(5, c3, c4, "Simone", ctrl, seed + 2)
-    Philosopher.start(5, c4, c5, "Elisabeth", ctrl, seed + 3)
-    Philosopher.start(5, c5, c1, "Ayn", ctrl, seed + 4)
+    Philosopher.start(5, c1, c2, "Arendt", ctrl, 3, seed)
+    Philosopher.start(5, c2, c3, "Hypatia", ctrl, 3, seed + 1)
+    Philosopher.start(5, c3, c4, "Simone", ctrl, 3, seed + 2)
+    Philosopher.start(5, c4, c5, "Elisabeth", ctrl, 3, seed + 3)
+    Philosopher.start(5, c5, c1, "Ayn", ctrl, 3, seed + 4)
     wait(5, [c1, c2, c3, c4, c5])
   end
 

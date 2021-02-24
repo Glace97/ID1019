@@ -37,12 +37,14 @@ defmodule Chopstick do
   end
 
   #modified request, specify time we are willing to wait
+  #not sure this is working
   def request({:stick, pid}, timeout) do
     send(pid, {:request, self()})
     receive do
       :granted ->
         :ok
-      after timeout ->
+    after
+      timeout ->
         :no
     end
   end
