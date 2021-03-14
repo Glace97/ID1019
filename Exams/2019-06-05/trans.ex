@@ -18,4 +18,14 @@ defmodule Trans do
     trans(tree, fun)
   end
 
+  def test() do
+    tree = {:node, 7,
+              {:node, 2,
+                {:node, 1, :nil, :nil},
+                {:node, 4, :nil, :nil}},
+              {:node, 5, :nil, :nil}}
+
+    remit(tree, 3)
+  end
+
 end
