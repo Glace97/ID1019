@@ -14,6 +14,7 @@ end
 
 
 #send more complex datastructures
+#note the select recieve
 defmodule Tic do
   def first do
     receive do

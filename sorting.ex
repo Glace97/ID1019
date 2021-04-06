@@ -31,9 +31,9 @@ defmodule Sorting do
   def merge([], l2) do l2 end
   def merge([h1|t1], [h2|t2] ) do
     if h1 < h2 do
-      [h1] ++ merge(t1, [h2|t2])
+      [h1|merge(t1, [h2|t2])]
     else
-      [h2] ++ merge([h1|t1],t2)
+      [h2|merge([h1|t1],t2)]
     end
   end
 

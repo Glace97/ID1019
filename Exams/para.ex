@@ -50,4 +50,47 @@ defmodule Para do
       {:ok, res, ^ref} -> res
     end
   end
+
+
+  ########################
+
+  def foldp([x|[]], _, mother) do send(mother, {:res, x}) end #foldp på ett elementet returnerar elementet själv
+
+  def foldp(lst, op, my_mother) do
+    mother = self()
+    {a,b} = split(lst)
+    spawn(fn() -> foldp(a, op, mother) end)
+    spawn(fn() -> foldp(b, op, mother) end)
+    #moderprocessen väntar på att de två subprocesserna skickar sina svar
+    receive do
+      {:res, x} ->
+        receive do
+          {:res, y} ->
+            res = op.(x,y)
+            #skickar till sin moderprocess
+            send(mother, {:res, res})
+        end
+    end
+
+
+  end
+
+  def split([], l, r) do {l, r} end
+  def split(lst) do split(lst, [], []) end
+  def split([h|t], l , r) do
+    split(t, [h|r], l)
+  end
+
+
+  def test() do
+    sum = fn(x,y) -> x+y end
+    lst = [1,2,3,4,5,6,7]
+    me = self()
+    foldp(lst, sum, me)
+
+    receive do
+      {:res, res} ->
+        res
+    end
+  end
 end

@@ -80,5 +80,4 @@ defmodule Philosopher do
       think(hunger, left, right, name, ctrl, starvation)
     end
   end
-
 end

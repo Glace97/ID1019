@@ -44,8 +44,9 @@ end
 defprotocol Object do
   # determines if ray intersects with an object
   def intersect(object, ray)
- #
- # def normal(object, ray, pos)
+
+  #defines perpendicular vector to object (for lighting)
+  def normal(object, ray, pos)
 end
 
 # sphere has pos in origo, with a radius of 2 as default
@@ -72,6 +73,7 @@ defmodule Sphere do
       Sphere.intersect(sphere, ray)
     end
 
+    #perpendicular normal vector
     def normal(sphere, _, pos) do
       # assuming we always hit it from the outside
       Vector.normalize(Vector.sub(pos, sphere.pos))
@@ -183,11 +185,15 @@ defmodule Tracer do
     case intersect(ray, objects) do
       # if not, infinity
       {:inf, _} ->
-        @black
+        world.background
 
       # if intersection, white indicates pic on canvas
-      {_, _} ->
-        @white
+      {d, obj} ->
+        i = Vector.add(ray.pos, Vector.smul(ray.dir, d - @delta))  #delta for margin of error
+        normal = Object.normal(obj,ray,i) #i = point of intersection (ray and obj)
+        visible = visible(i, world.lights, objects) #all lights in world, give all visible obj
+        illumination = Light.combine(i, normal, visible) #return to illumination, give point of intersection + normal + visiblepoint
+        Light.illuminate(obj, illumination, world) #what color of point?
     end
   end
 
@@ -226,6 +232,18 @@ defmodule Snap do
     # PPM prints out image
     PPM.write("snap0.ppm", image)
   end
+end
+
+
+defmodule World do
+  @background {0, 0, 0}
+  @ambient{0.3, 0.3, 0.3}
+
+  #give tracer world and camera
+  defstruct(objects: [],
+            lights: [],
+            background: @background,
+            ambient: @ambient)
 end
 
 defmodule PPM do

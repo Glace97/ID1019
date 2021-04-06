@@ -58,7 +58,7 @@ defmodule Cars do
   end
 
   #kan förenklas ner till denna funktion (förutsatt at model/angivet egenskap verkligen finns)
-  def car_brand_model_3({:car, brand, %{:model =>model}}) do
+  def car_brand_model_3({:car, brand, %{:model => model}}) do
     "#{brand} #{model}"
   end
 
